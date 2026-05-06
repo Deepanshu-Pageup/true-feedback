@@ -14,10 +14,10 @@ export interface User extends Document {
     verifyCodeExpiry: Date;
     isVerified: boolean,
     isAcceptingMessage: boolean;
-    message: Message[];
+    messages: Message[];
 }
 
-const messageSchemna: Schema<Message> = new Schema(
+export const messageSchemna: Schema<Message> = new Schema(
     {
         content: {
             type: String,
@@ -68,7 +68,7 @@ const userSchema: Schema<User> = new Schema (
             type: Boolean,
             default: true,
         },
-        message: {
+        messages: {
             type: [messageSchemna],
             required: [true, 'messages is required'],
         }
