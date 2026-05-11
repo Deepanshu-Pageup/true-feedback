@@ -33,7 +33,7 @@ function page() {
   const [usernameMessage, setUsernameMessage] = useState("");
   const [isCheckingUsername, setIsCheckingUsername] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-   const [showPassword , setShowPassword] = useState(false)
+  const [showPassword, setShowPassword] = useState(false);
 
   const router = useRouter();
 
@@ -49,6 +49,12 @@ function page() {
 
   const debouncedSetUsername = useDebounceCallback(setUsername, 300);
   useEffect(() => {
+    console.log("Form state:", {
+      usernameValue: form.watch("username"),
+      fieldState: form.formState.errors.username,
+      isCheckingUsername,
+      usernameMessage,
+    });
     const checkUsernameUnique = async () => {
       if (username) {
         setIsCheckingUsername(true);
@@ -57,22 +63,20 @@ function page() {
           const response = await axios.get(
             `/api/check-username-unique?username=${encodeURIComponent(username)}`,
           );
-          let message = response?.data.message ?? "Username check completed";
-          if (Array.isArray(message) && message.length > 0) {
-            message = message[0].message;
-          } else if (typeof message === "object" && message !== null) {
-            message = message.message;
-          }
-          setUsernameMessage(typeof message === "string" ? message : "Username check completed");
+
+          setUsername(response.data.message);
         } catch (error) {
-          const axiosError = error as AxiosError<ApiResponse>;
-          let message = axiosError.response?.data.message ?? "Error checking username";
+          const axiosError = error as AxiosError<any>;
+          const message = axiosError.response?.data?.message;
+
+          // Handle both string and array responses
           if (Array.isArray(message) && message.length > 0) {
-            message = message[0].message;
-          } else if (typeof message === "object" && message !== null) {
-            message = (message as any).message;
+            setUsernameMessage(message[0]?.message || "Invalid username");
+          } else if (typeof message === "string") {
+            setUsernameMessage(message);
+          } else {
+            setUsernameMessage("Error checking username");
           }
-          setUsernameMessage(typeof message === "string" ? message : "Error checking username");
         } finally {
           setIsCheckingUsername(false);
         }
@@ -83,7 +87,7 @@ function page() {
     checkUsernameUnique();
   }, [username]);
 
-   console.log(usernameMessage)
+  console.log(usernameMessage);
 
   const onSubmit = async (data: z.infer<typeof signUpValidation>) => {
     setIsSubmitting(true);
@@ -116,7 +120,6 @@ function page() {
     }
   };
 
- 
   return (
     <div className="flex justify-center items-center min-h-screen bg-background p-4">
       <div className="w-full max-w-md">
@@ -155,7 +158,7 @@ function page() {
                           debouncedSetUsername(e.target.value);
                         }}
                       />
-                      {fieldState.invalid && (
+                      {!isCheckingUsername && fieldState.invalid && (
                         <FieldError errors={[fieldState.error]} />
                       )}
                       {isCheckingUsername && (
@@ -204,7 +207,7 @@ function page() {
                       <FieldLabel htmlFor="password">
                         Enter your password
                       </FieldLabel>
-                       <InputGroup>
+                      <InputGroup>
                         <Input
                           {...field}
                           id="password"
@@ -252,10 +255,7 @@ function page() {
             <div className="text-center text-sm w-full mt-4">
               <p className="text-muted-foreground">
                 Already a member?{" "}
-                <Link
-                  href="/sign-in"
-                  className="text-primary hover:underline"
-                >
+                <Link href="/sign-in" className="text-primary hover:underline">
                   Sign in
                 </Link>
               </p>
