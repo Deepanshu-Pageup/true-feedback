@@ -3,6 +3,7 @@ import { authOption } from "../auth/[...nextauth]/option";
 import dbConnect from "@/lib/dbConnection";
 import UserModel from "@/model/user.model";
 import { User } from "next-auth";
+import mongoose from "mongoose";
 
 
 export async function GET(req : Request) {
@@ -21,7 +22,7 @@ export async function GET(req : Request) {
     
     try {
         const user = await UserModel.aggregate([
-            {$match: {id: userId}},
+            {$match: {_id: new mongoose.Types.ObjectId(userId)}},
             {$unwind: '$messages'},
             {$sort: {'messages.createdAt': -1}},
             {$group: {_id: '$_id', messages: {$push: '$messages'}}}

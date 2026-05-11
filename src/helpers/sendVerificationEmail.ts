@@ -10,8 +10,9 @@ export async function sendVerficationEmail (
     verifyCode: string,
 ): Promise<ApiResponse>{
     try {
+      const fromEmail = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
       const { data, error } = await resend.emails.send({
-      from: 'dupli1958@gmail.com',
+      from: fromEmail,
       to: email,
       subject: 'Mystry message | Verification code',
       react: VerificationEmail({
@@ -19,6 +20,14 @@ export async function sendVerficationEmail (
         otp:verifyCode,
       }),
     });
+
+    if (error) {
+      console.error("Resend email API error:", error);
+      return {
+        success: false,
+        message: error.message || "Failed to send verification email",
+      };
+    }
 
     return {
         success: true,

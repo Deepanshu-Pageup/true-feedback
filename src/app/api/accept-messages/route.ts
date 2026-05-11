@@ -21,16 +21,16 @@ export async function POST(req: Request) {
   }
 
   const userId = user._id;
-  const { acceptMessages } = await req.json();
+  const { isAcceptingMessages } = await req.json();
 
   try {
     const updatedUser = await UserModel.findByIdAndUpdate(
       userId,
       {
-        isAcceptingMessage: acceptMessages,
+        isAcceptingMessages: isAcceptingMessages,
       },
       {
-        new: true,
+        returnDocument: "after",
       },
     );
 
@@ -80,7 +80,7 @@ export async function GET(req: Request) {
 
   const userId = user._id;
   try {
-    const userFound = await UserModel.findById({ userId });
+    const userFound = await UserModel.findById(userId);
 
     if (!userFound) {
       return Response.json(
@@ -95,7 +95,7 @@ export async function GET(req: Request) {
     return Response.json(
       {
         success: true,
-        isAccetingMessage: userFound.isAcceptingMessage,
+        isAcceptingMessages: userFound.isAcceptingMessages,
         message: "User is Accepting messages",
       },
       { status: 200 },

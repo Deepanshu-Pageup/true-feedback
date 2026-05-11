@@ -18,6 +18,8 @@ export async function POST(req: Request) {
     });
 
     if (exisitingUserVerifiedByUsername) {
+      console.log("exists user verified by username",exisitingUserVerifiedByUsername);
+      
       return Response.json(
         {
           success: false,
@@ -32,7 +34,9 @@ export async function POST(req: Request) {
     const verifiedCode = Math.floor(100000 + Math.random() * 900000).toString();
 
     if (existingUserByEmail) {
-        if(existingUserByEmail.isVerified) {
+      console.log("exisit user by email", existingUserByEmail);
+      
+        if(existingUserByEmail.isVerified) { 
             return Response.json({
                 success: false,
                 message: "User already exist with this email"
@@ -59,6 +63,8 @@ export async function POST(req: Request) {
         isAcceptingMessage: true,
         message: [],
       });
+      console.log(newUser);
+      
 
       await newUser.save();
     }
