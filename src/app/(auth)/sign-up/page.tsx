@@ -49,13 +49,7 @@ function page() {
 
   const debouncedSetUsername = useDebounceCallback(setUsername, 300);
   useEffect(() => {
-    console.log("Form state:", {
-      usernameValue: form.watch("username"),
-      fieldState: form.formState.errors.username,
-      isCheckingUsername,
-      usernameMessage,
-    });
-    const checkUsernameUnique = async () => {
+  const checkUsernameUnique = async () => {
       if (username) {
         setIsCheckingUsername(true);
         setUsernameMessage("");
@@ -63,8 +57,7 @@ function page() {
           const response = await axios.get(
             `/api/check-username-unique?username=${encodeURIComponent(username)}`,
           );
-
-          setUsername(response.data.message);
+         
         } catch (error) {
           const axiosError = error as AxiosError<any>;
           const message = axiosError.response?.data?.message;
@@ -169,12 +162,14 @@ function page() {
                       {!isCheckingUsername && usernameMessage && (
                         <p
                           className={`text-sm ${
-                            usernameMessage === "Username is unique"
+                            usernameMessage === "Username is available"
                               ? "text-green-500"
                               : "text-red-500"
                           }`}
                         >
-                          {usernameMessage}
+                          { usernameMessage === "Username is available" ? 
+                           usernameMessage + " ✓" : usernameMessage
+                          }
                         </p>
                       )}
                     </Field>

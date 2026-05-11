@@ -29,10 +29,9 @@ export async function POST(req: Request) {
     }
 
     const response = result.toTextStreamResponse();
-    return Response.json({
-      success: true,
-      message: response
-    })
+    console.log(response);
+    
+    return response;
   } catch (error) {
     console.error("Unexpected Error ,", error);
     return Response.json(

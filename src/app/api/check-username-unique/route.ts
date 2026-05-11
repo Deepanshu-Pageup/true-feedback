@@ -18,11 +18,15 @@ export async function GET(req:Request) {
         // validate with zod 
        const result = UsernameQuerySchema.safeParse(queryParam) 
        if(!result.success) {
-        const usernameError = result.error || [];
-        return Response.json({
-            success: false,
-            message: usernameError ? usernameError : "Invalid query parameter"
-        })
+            const flattend = result.error.flatten();
+            const fieldError = flattend.fieldErrors;
+
+            const errorMessage = fieldError.username?.[0] || "Invalid error";
+
+            return Response.json({
+                success: false,
+                message: errorMessage,
+            }, {status: 400})   
        }
 
        const {username} = result.data;

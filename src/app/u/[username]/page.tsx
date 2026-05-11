@@ -8,7 +8,7 @@ import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { CardHeader, CardContent, Card } from "@/components/ui/card";
-import {useCompletion} from '@ai-sdk/react';
+// import {useCompletion} from '@ai-sdk/react';
 import * as z from "zod";
 import { ApiResponse } from "@/types/ApiResponse";
 import Link from "next/link";
@@ -33,6 +33,9 @@ export default function SendMessage() {
   const params = useParams<{ username: string }>();
   const username = params.username;
   const [runTour , setRunTour] = useState(false);
+  const [completion , setCompletion] = useState(initialMessageString)
+  const [isSuggestLoading , setIsSuggestLoading] = useState(false)
+  const [suggestError , setSuggestError] = useState<string | null>(null)
 
   const steps: Step[] = [
     {
@@ -50,15 +53,15 @@ export default function SendMessage() {
     }
   ];
 
-  const {
-    complete,
-    completion,
-    isLoading: isSuggestLoading,
-    error,
-  } = useCompletion({
-    api: "/api/suggest-messages",
-    initialCompletion: initialMessageString,
-  });
+  // const {
+  //   complete,
+  //   completion,
+  //   isLoading: isSuggestLoading,
+  //   error,
+  // } = useCompletion({
+  //   api: "/api/suggest-messages",
+  //   initialCompletion: initialMessageString,
+  // });
 
   const form = useForm<z.infer<typeof messageSchema>>({
     resolver: zodResolver(messageSchema),
@@ -99,10 +102,36 @@ export default function SendMessage() {
 
   const fetchSuggestedMessages = async () => {
     try {
-      complete("");
+      setIsSuggestLoading(true);
+      setSuggestError(null)
+     const response = await fetch("/api/suggest-messages" , {
+      method: "POST",
+      headers: {
+        "Content-type": "application-json"
+      },
+      body: JSON.stringify({prompt: ''})
+     });
+
+     if(!response.ok) throw new Error('Failed to get the Suggestion messages');
+     if(!response.body) throw new Error('No response body');
+
+     const reader = response.body.getReader();
+     const decoder = new TextDecoder();
+
+     let result = "";
+
+     while(true) {
+      const {done , value} = await reader.read();
+      if(done) break;
+      result += decoder.decode(value , {stream: true});
+      setCompletion(result);
+     }
     } catch (error) {
       console.error("Error fetching messages:", error);
-      // Handle error appropriately
+      setSuggestError("Failed to fetch suggestions");
+      toast.error("Failed to fetch suggestions");
+    }finally {
+      setIsSuggestLoading(false)
     }
   };
 
@@ -180,8 +209,8 @@ export default function SendMessage() {
             <h3 className="text-xl font-semibold">Messages</h3>
           </CardHeader>
           <CardContent className="flex flex-col space-y-4">
-            {error ? (
-              <p className="text-red-500">{error.message}</p>
+            {suggestError ? (
+              <p className="text-red-500">{suggestError}</p>
             ) : (
               parseStringMessages(completion).map((message, index) => (
                 <Button
